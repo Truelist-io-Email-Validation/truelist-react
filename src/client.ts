@@ -73,5 +73,6 @@ export async function verifyEmail(
     suggestion: data.suggestion,
     freeEmail: data.free_email,
     role: data.role,
+    disposable: data.disposable,
   };
 }

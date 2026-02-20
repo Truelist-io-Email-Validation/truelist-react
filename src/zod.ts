@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ZodType } from "zod";
-import { verifyEmail } from "./client";
+import { verifyEmail, TruelistApiError } from "./client";
 import type { TruelistConfig, ValidationState } from "./types";
 
 export type TruelistEmailOptions = TruelistConfig & {
@@ -61,7 +61,11 @@ export function truelistEmail(options: TruelistEmailOptions): ZodType<string> {
             endpoint ?? "verify"
           );
           return !rejectStates.includes(result.state);
-        } catch {
+        } catch (err) {
+          // Auth errors must always surface — never silently swallow a 401
+          if (err instanceof TruelistApiError && err.status === 401) {
+            throw err;
+          }
           // If the API is unavailable, don't block form submission
           return true;
         }

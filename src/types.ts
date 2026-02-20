@@ -25,9 +25,11 @@ export type ValidationResult = {
   /** A suggested correction if a typo was detected (e.g. "Did you mean gmail.com?"). */
   suggestion?: string;
   /** Whether the email belongs to a free email provider. */
-  freeEmail?: boolean;
+  freeEmail: boolean;
   /** Whether the email is a role-based address (e.g. info@, support@). */
-  role?: boolean;
+  role: boolean;
+  /** Whether the email uses a disposable/temporary email provider. */
+  disposable: boolean;
 };
 
 /** Configuration for the Truelist provider and API client. */
@@ -44,6 +46,7 @@ export type ApiResponse = {
   sub_state: ValidationSubState;
   email: string;
   suggestion?: string;
-  free_email?: boolean;
-  role?: boolean;
+  free_email: boolean;
+  role: boolean;
+  disposable: boolean;
 };
