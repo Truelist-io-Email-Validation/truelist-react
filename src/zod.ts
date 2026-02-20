@@ -5,6 +5,11 @@ import type { TruelistConfig, ValidationState } from "./types";
 
 export type TruelistEmailOptions = TruelistConfig & {
   /**
+   * Which API endpoint to use. Default: `"verify"` (server-side).
+   * Use `"form_verify"` for client-side usage.
+   */
+  endpoint?: "form_verify" | "verify";
+  /**
    * Which validation states to treat as invalid.
    * Default: `["invalid"]`
    *
@@ -38,6 +43,7 @@ export function truelistEmail(options: TruelistEmailOptions): ZodType<string> {
   const {
     apiKey,
     baseUrl,
+    endpoint,
     rejectStates = ["invalid"],
     message = "This email address is not valid.",
   } = options;
@@ -48,7 +54,12 @@ export function truelistEmail(options: TruelistEmailOptions): ZodType<string> {
     .refine(
       async (email) => {
         try {
-          const result = await verifyEmail(email, { apiKey, baseUrl });
+          const result = await verifyEmail(
+            email,
+            { apiKey, baseUrl },
+            undefined,
+            endpoint ?? "verify"
+          );
           return !rejectStates.includes(result.state);
         } catch {
           // If the API is unavailable, don't block form submission

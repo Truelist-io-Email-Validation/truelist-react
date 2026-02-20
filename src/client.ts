@@ -13,23 +13,25 @@ export class TruelistApiError extends Error {
 }
 
 /**
- * Validates an email address using the Truelist form_verify API.
+ * Validates an email address using the Truelist API.
  *
  * Works in browsers and edge runtimes (uses `fetch`, no Node.js-specific APIs).
  *
  * @param email - The email address to validate.
  * @param config - API key and optional base URL.
  * @param signal - Optional AbortSignal to cancel the request.
+ * @param endpoint - Which API endpoint to use. `"form_verify"` for client-side, `"verify"` for server-side. Default: `"form_verify"`.
  * @returns The validation result.
  * @throws {TruelistApiError} When the API returns a non-OK response.
  */
 export async function verifyEmail(
   email: string,
   config: TruelistConfig,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  endpoint: "form_verify" | "verify" = "form_verify"
 ): Promise<ValidationResult> {
   const baseUrl = config.baseUrl ?? DEFAULT_BASE_URL;
-  const url = `${baseUrl}/api/v1/form_verify`;
+  const url = `${baseUrl}/api/v1/${endpoint}`;
 
   const response = await fetch(url, {
     method: "POST",

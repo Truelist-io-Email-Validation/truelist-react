@@ -3,6 +3,11 @@ import type { TruelistConfig, ValidationState } from "./types";
 
 export type TruelistFieldValidatorOptions = TruelistConfig & {
   /**
+   * Which API endpoint to use. Default: `"verify"` (server-side).
+   * Use `"form_verify"` for client-side usage.
+   */
+  endpoint?: "form_verify" | "verify";
+  /**
    * Which validation states to treat as invalid.
    * Default: `["invalid"]`
    */
@@ -41,6 +46,7 @@ export function truelistFieldValidator(
   const {
     apiKey,
     baseUrl,
+    endpoint,
     rejectStates = ["invalid"],
     message = "This email address is not valid.",
   } = options;
@@ -51,7 +57,12 @@ export function truelistFieldValidator(
     }
 
     try {
-      const result = await verifyEmail(value, { apiKey, baseUrl });
+      const result = await verifyEmail(
+        value,
+        { apiKey, baseUrl },
+        undefined,
+        endpoint ?? "verify"
+      );
 
       if (rejectStates.includes(result.state)) {
         return message;

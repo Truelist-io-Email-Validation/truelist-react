@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { verifyEmail, TruelistApiError } from "./client";
 import { useTruelistConfig } from "./provider";
 import type { ValidationResult } from "./types";
@@ -69,8 +69,11 @@ export function useEmailValidation(
         debounceTimerRef.current = null;
       }
 
-      // Skip empty or obviously incomplete emails
+      // Clear previous state when email is empty or incomplete
       if (!email || !email.includes("@")) {
+        setResult(null);
+        setError(null);
+        setIsValidating(false);
         return;
       }
 
@@ -133,6 +136,18 @@ export function useEmailValidation(
     setResult(null);
     setError(null);
     setIsValidating(false);
+  }, []);
+
+  // Clean up on unmount: cancel pending debounce and in-flight requests
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   return { validate, result, isValidating, error, reset };

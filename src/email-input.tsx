@@ -4,7 +4,7 @@ import { useEmailValidation } from "./use-email-validation";
 import type { UseEmailValidationOptions } from "./use-email-validation";
 import type { ValidationResult, ValidationState } from "./types";
 
-export type ValidateOn = "blur" | "change" | "submit";
+export type ValidateOn = "blur" | "change";
 
 export type EmailInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
