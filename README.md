@@ -17,7 +17,7 @@ import { TruelistProvider, useEmailValidation } from "@truelist/react";
 
 function App() {
   return (
-    <TruelistProvider apiKey="your-form-api-key">
+    <TruelistProvider apiKey="your-api-key">
       <SignupForm />
     </TruelistProvider>
   );
@@ -30,7 +30,7 @@ function SignupForm() {
     <input
       type="email"
       onChange={(e) => validate(e.target.value)}
-      aria-invalid={result?.state === "invalid"}
+      aria-invalid={result?.state === "email_invalid"}
     />
   );
 }
@@ -58,8 +58,8 @@ function EmailField() {
         placeholder="you@example.com"
       />
       {isValidating && <span>Checking...</span>}
-      {result?.state === "invalid" && <span>This email is not valid.</span>}
-      {result?.state === "risky" && <span>This email may not receive mail.</span>}
+      {result?.state === "email_invalid" && <span>This email is not valid.</span>}
+      {result?.state === "accept_all" && <span>This email may not be verifiable.</span>}
       {result?.suggestion && <span>Did you mean {result.suggestion}?</span>}
       {error && <span>{error}</span>}
       <button onClick={reset}>Clear</button>
@@ -106,15 +106,15 @@ import { EmailInput } from "@truelist/react";
 The input exposes a `data-validation-state` attribute for CSS styling:
 
 ```css
-input[data-validation-state="valid"] {
+input[data-validation-state="ok"] {
   border-color: green;
 }
 
-input[data-validation-state="invalid"] {
+input[data-validation-state="email_invalid"] {
   border-color: red;
 }
 
-input[data-validation-state="risky"] {
+input[data-validation-state="accept_all"] {
   border-color: orange;
 }
 
@@ -129,7 +129,7 @@ All standard `<input>` props are supported, plus:
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `validateOn` | `"blur" \| "change" \| "submit"` | `"blur"` | When to trigger validation |
+| `validateOn` | `"blur" \| "change"` | `"blur"` | When to trigger validation |
 | `debounceMs` | `number` | `500` | Debounce delay for "change" mode |
 | `onValidation` | `(result: ValidationResult) => void` | -- | Callback when validation completes |
 | `renderSuggestion` | `(suggestion: string) => ReactNode` | -- | Custom suggestion renderer |
@@ -144,7 +144,7 @@ import { z } from "zod";
 import { truelistEmail } from "@truelist/react/zod";
 
 const schema = z.object({
-  email: truelistEmail({ apiKey: "your-form-api-key" }),
+  email: truelistEmail({ apiKey: "your-api-key" }),
 });
 
 // Async validation (required for API calls)
@@ -155,17 +155,17 @@ const result = await schema.parseAsync({ email: "user@example.com" });
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `apiKey` | `string` | *required* | Your Truelist form API key |
+| `apiKey` | `string` | *required* | Your Truelist API key |
 | `baseUrl` | `string` | `https://api.truelist.io` | Custom API base URL |
-| `rejectStates` | `ValidationState[]` | `["invalid"]` | States that fail validation |
+| `rejectStates` | `ValidationState[]` | `["email_invalid"]` | States that fail validation |
 | `message` | `string` | `"This email address is not valid."` | Error message |
 
-Reject risky emails too:
+Reject unknown emails too:
 
 ```ts
 truelistEmail({
-  apiKey: "your-form-api-key",
-  rejectStates: ["invalid", "risky"],
+  apiKey: "your-api-key",
+  rejectStates: ["email_invalid", "unknown"],
 });
 ```
 
@@ -179,7 +179,7 @@ import { truelistFieldValidator } from "@truelist/react/react-hook-form";
 
 function SignupForm() {
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const validate = truelistFieldValidator({ apiKey: "your-form-api-key" });
+  const validate = truelistFieldValidator({ apiKey: "your-api-key" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -195,9 +195,9 @@ function SignupForm() {
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `apiKey` | `string` | *required* | Your Truelist form API key |
+| `apiKey` | `string` | *required* | Your Truelist API key |
 | `baseUrl` | `string` | `https://api.truelist.io` | Custom API base URL |
-| `rejectStates` | `ValidationState[]` | `["invalid"]` | States that fail validation |
+| `rejectStates` | `ValidationState[]` | `["email_invalid"]` | States that fail validation |
 | `message` | `string` | `"This email address is not valid."` | Error message |
 
 ## Types
@@ -214,23 +214,23 @@ import type {
 ### `ValidationState`
 
 ```ts
-type ValidationState = "valid" | "invalid" | "risky" | "unknown";
+type ValidationState = "ok" | "email_invalid" | "accept_all" | "unknown";
 ```
 
 ### `ValidationSubState`
 
 ```ts
 type ValidationSubState =
-  | "ok"
-  | "accept_all"
-  | "disposable_address"
-  | "role_address"
+  | "email_ok"
+  | "is_disposable"
+  | "is_role"
+  | "failed_smtp_check"
   | "failed_mx_check"
   | "failed_spam_trap"
   | "failed_no_mailbox"
   | "failed_greylisted"
   | "failed_syntax_check"
-  | "unknown";
+  | "unknown_error";
 ```
 
 ### `ValidationResult`
@@ -240,9 +240,13 @@ type ValidationResult = {
   state: ValidationState;
   subState: ValidationSubState;
   email: string;
-  suggestion?: string;
-  freeEmail?: boolean;
-  role?: boolean;
+  domain: string;
+  canonical: string;
+  mxRecord: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  verifiedAt: string;
+  suggestion: string | null;
 };
 ```
 
@@ -262,22 +266,21 @@ type TruelistConfig = {
 Wrap your app with `TruelistProvider` to make the API key available to all hooks and components:
 
 ```tsx
-<TruelistProvider apiKey="your-form-api-key" baseUrl="https://api.truelist.io">
+<TruelistProvider apiKey="your-api-key" baseUrl="https://api.truelist.io">
   <App />
 </TruelistProvider>
 ```
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `apiKey` | `string` | *required* | Your Truelist form API key |
+| `apiKey` | `string` | *required* | Your Truelist API key |
 | `baseUrl` | `string` | `https://api.truelist.io` | Custom API base URL |
 
 ### API Details
 
-- **Endpoint**: `POST https://api.truelist.io/api/v1/form_verify`
-- **Auth**: Bearer token (your form API key)
-- **Rate limit**: 60 requests per minute for form keys
-- **Billing**: Credits are only charged for definitive results (`valid`/`invalid`), not for `unknown`
+- **Endpoint**: `POST https://api.truelist.io/api/v1/verify_inline?email=user@example.com`
+- **Auth**: Bearer token (your API key)
+- **Response**: `{ "emails": [{ "address": "...", "email_state": "ok", ... }] }`
 
 Get your API key at [truelist.io](https://truelist.io).
 

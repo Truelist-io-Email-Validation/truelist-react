@@ -42,7 +42,7 @@ export type UseEmailValidationReturn = {
  *     <input
  *       type="email"
  *       onChange={(e) => validate(e.target.value)}
- *       aria-invalid={result?.state === "invalid"}
+ *       aria-invalid={result?.state === "email_invalid"}
  *     />
  *   );
  * }
