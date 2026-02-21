@@ -14,7 +14,7 @@ export { EmailInput } from "./email-input";
 export type { EmailInputProps, ValidateOn } from "./email-input";
 
 // Client
-export { verifyEmail, TruelistApiError } from "./client";
+export { verifyEmail, getAccount, TruelistApiError } from "./client";
 
 // Types
 export type {
@@ -22,4 +22,6 @@ export type {
   ValidationSubState,
   ValidationResult,
   TruelistConfig,
+  ApiResponse,
+  ApiEmailRecord,
 } from "./types";

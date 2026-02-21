@@ -18,7 +18,7 @@ export type EmailInputProps = Omit<
   onValidation?: (result: ValidationResult) => void;
   /**
    * Render function for the suggestion message.
-   * Receives the suggested domain (e.g. "gmail.com").
+   * Receives the suggested correction (e.g. "user@gmail.com").
    * If not provided, a default message is rendered as a `<span>`.
    */
   renderSuggestion?: (suggestion: string) => React.ReactNode;
@@ -118,7 +118,7 @@ export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
           onChange={handleChange}
           onBlur={handleBlur}
           data-validation-state={dataState}
-          aria-invalid={result?.state === "invalid" || undefined}
+          aria-invalid={result?.state === "email_invalid" || undefined}
         />
         {result?.suggestion &&
           (renderSuggestion ? (
