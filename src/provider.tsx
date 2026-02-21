@@ -5,7 +5,7 @@ import type { TruelistConfig } from "./types";
 const TruelistContext = createContext<TruelistConfig | null>(null);
 
 export type TruelistProviderProps = {
-  /** Your Truelist form API key. */
+  /** Your Truelist API key. */
   apiKey: string;
   /** Base URL for the Truelist API. Defaults to `https://api.truelist.io`. */
   baseUrl?: string;
@@ -20,7 +20,7 @@ export type TruelistProviderProps = {
  *
  * @example
  * ```tsx
- * <TruelistProvider apiKey="your-form-api-key">
+ * <TruelistProvider apiKey="your-api-key">
  *   <App />
  * </TruelistProvider>
  * ```

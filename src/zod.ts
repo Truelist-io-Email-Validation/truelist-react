@@ -5,15 +5,10 @@ import type { TruelistConfig, ValidationState } from "./types";
 
 export type TruelistEmailOptions = TruelistConfig & {
   /**
-   * Which API endpoint to use. Default: `"verify"` (server-side).
-   * Use `"form_verify"` for client-side usage.
-   */
-  endpoint?: "form_verify" | "verify";
-  /**
    * Which validation states to treat as invalid.
-   * Default: `["invalid"]`
+   * Default: `["email_invalid"]`
    *
-   * Example: reject risky emails too with `["invalid", "risky"]`.
+   * Example: reject unknown emails too with `["email_invalid", "unknown"]`.
    */
   rejectStates?: ValidationState[];
   /** Custom error message. Default: "This email address is not valid." */
@@ -32,7 +27,7 @@ export type TruelistEmailOptions = TruelistConfig & {
  * import { truelistEmail } from "@truelist/react/zod";
  *
  * const schema = z.object({
- *   email: truelistEmail({ apiKey: "your-form-api-key" }),
+ *   email: truelistEmail({ apiKey: "your-api-key" }),
  * });
  *
  * // Async validation
@@ -43,8 +38,7 @@ export function truelistEmail(options: TruelistEmailOptions): ZodType<string> {
   const {
     apiKey,
     baseUrl,
-    endpoint,
-    rejectStates = ["invalid"],
+    rejectStates = ["email_invalid"],
     message = "This email address is not valid.",
   } = options;
 
@@ -54,15 +48,10 @@ export function truelistEmail(options: TruelistEmailOptions): ZodType<string> {
     .refine(
       async (email) => {
         try {
-          const result = await verifyEmail(
-            email,
-            { apiKey, baseUrl },
-            undefined,
-            endpoint ?? "verify"
-          );
+          const result = await verifyEmail(email, { apiKey, baseUrl });
           return !rejectStates.includes(result.state);
         } catch (err) {
-          // Auth errors must always surface — never silently swallow a 401
+          // Auth errors must always surface -- never silently swallow a 401
           if (err instanceof TruelistApiError && err.status === 401) {
             throw err;
           }
