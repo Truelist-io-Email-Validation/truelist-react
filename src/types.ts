@@ -1,5 +1,5 @@
 /** Primary validation state returned by the Truelist API. */
-export type ValidationState = "ok" | "email_invalid" | "accept_all" | "unknown";
+export type ValidationState = "ok" | "email_invalid" | "risky" | "accept_all" | "unknown";
 
 /** Detailed sub-state providing more context about the validation result. */
 export type ValidationSubState =
